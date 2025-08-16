@@ -51,11 +51,6 @@ in
   services.zfs.autoScrub.enable = true;
   services.zfs.trim.enable = true;
 
-  fileSystems = {
-    "/var/log".neededForBoot = true;
-    "/persistent".neededForBoot = true;
-  };
-
   disko.devices = {
     disk.nvme0 = {
       type = "disk";
@@ -114,10 +109,39 @@ in
         postCreateHook = "zfs list -t snapshot -H -o name | grep -E '^${rootPoolName}@blank$' || zfs snapshot ${rootPoolName}@blank";
 
         datasets = {
+          # stuff which can be recomputed/easily redownloaded, e.g. nix store
           local = {
             type = "zfs_fs";
             options.mountpoint = "none";
           };
+          "local/nix" = {
+            type = "zfs_fs";
+            options = {
+              reservation = "128M";
+              mountpoint = "legacy"; # to manage "with traditional tools"
+            };
+            mountpoint = "/nix"; # nixos configuration mountpoint
+          };
+
+          # _system_ data
+          system = {
+            type = "zfs_fs";
+            options = {
+              mountpoint = "none";
+            };
+          };
+          "system/root" = {
+            type = "zfs_fs";
+            options.mountpoint = "legacy";
+            mountpoint = "/";
+          };
+          "system/var" = {
+            type = "zfs_fs";
+            options.mountpoint = "legacy";
+            mountpoint = "/var";
+          };
+
+          # _user_ and _user service_ data. safest, long retention policy
           safe = {
             type = "zfs_fs";
             options = {
@@ -125,77 +149,18 @@ in
               mountpoint = "none";
             };
           };
-
-          "local/reserved" = {
-            type = "zfs_fs";
-            options = {
-              mountpoint = "none";
-              reservation = "5GiB";
-            };
-          };
-          "local/root" = {
-            type = "zfs_fs";
-            mountpoint = "/";
-            options.mountpoint = "legacy";
-            postCreateHook = ''
-              zfs snapshot rpool/local/root@blank
-            '';
-          };
-          "local/nix" = {
-            type = "zfs_fs";
-            mountpoint = "/nix";
-            options = {
-              atime = "off";
-              canmount = "on";
-              mountpoint = "legacy";
-              reservation = "128M";
-              "com.sun:auto-snapshot" = "true";
-            };
-          };
-          "local/log" = {
-            type = "zfs_fs";
-            mountpoint = "/var/log";
-            options = {
-              mountpoint = "legacy";
-              "com.sun:auto-snapshot" = "true";
-            };
-          };
-
           "safe/data" = {
             type = "zfs_fs";
+            options.mountpoint = "legacy";
             mountpoint = "/data";
-            options = {
-              mountpoint = "legacy";
-              "com.sun:auto-snapshot" = "true";
-            };
           };
-          "safe/persistent" = {
+          "safe/var/lib" = {
             type = "zfs_fs";
-            mountpoint = "/persistent";
-            options = {
-              mountpoint = "legacy";
-              "com.sun:auto-snapshot" = "true";
-            };
+            options.mountpoint = "legacy";
+            mountpoint = "/var/lib";
           };
         };
       };
     };
-  };
-
-  environment.persistence."/persistent" = {
-    hideMounts = true;
-    directories = [
-      "/etc/ssh"
-      "/var/lib/bluetooth"
-      "/var/lib/fwupd"
-      "/var/lib/nixos"
-      "/var/lib/systemd/coredump"
-      "/var/lib/upower"
-    ];
-    files = [
-      "/etc/adjtime"
-      "/etc/machine-id"
-      "/etc/zfs/zpool.cache"
-    ];
   };
 }

@@ -36,7 +36,6 @@
       # url = "github:nix-community/disko";
       inputs.nixpkgs.follows = "nixos-raspberrypi/nixpkgs";
     };
-    impermanence.url = "github:nix-community/impermanence";
     agenix = {
       url = "https://flakehub.com/f/ryantm/agenix/0.14.0.tar.gz";
       inputs.nixpkgs.follows = "nixpkgs";
@@ -57,7 +56,6 @@
       self,
       agenix,
       disko,
-      impermanence,
       lix-module,
       nixos-anywhere,
       nixos-raspberrypi,
@@ -96,7 +94,6 @@
           agenix.nixosModules.age
           disko.nixosModules.disko
           lix-module.nixosModules.default
-          impermanence.nixosModules.impermanence
 
           "${self}/configuration.nix"
         ];
