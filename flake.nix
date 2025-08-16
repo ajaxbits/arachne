@@ -25,6 +25,10 @@
     nixos-raspberrypi = {
       url = "github:nvmd/nixos-raspberrypi/main";
     };
+    lix-module = {
+      url = "https://git.lix.systems/lix-project/nixos-module/archive/2.93.3-1.tar.gz";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
 
     disko = {
       # the fork is needed for partition attributes support
@@ -32,6 +36,7 @@
       # url = "github:nix-community/disko";
       inputs.nixpkgs.follows = "nixos-raspberrypi/nixpkgs";
     };
+    impermanence.url = "github:nix-community/impermanence";
     agenix = {
       url = "https://flakehub.com/f/ryantm/agenix/0.14.0.tar.gz";
       inputs.nixpkgs.follows = "nixpkgs";
@@ -52,6 +57,8 @@
       self,
       agenix,
       disko,
+      impermanence,
+      lix-module,
       nixos-anywhere,
       nixos-raspberrypi,
       nixpkgs,
@@ -86,8 +93,11 @@
           inherit user;
         };
         modules = [
-          disko.nixosModules.disko
           agenix.nixosModules.age
+          disko.nixosModules.disko
+          lix-module.nixosModules.default
+          impermanence.nixosModules.impermanence
+
           "${self}/configuration.nix"
         ];
       };

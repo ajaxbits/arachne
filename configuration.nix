@@ -2,7 +2,6 @@
   centralConfig,
   config,
   nixos-raspberrypi,
-  user,
   pkgs,
   ...
 }:
@@ -19,8 +18,32 @@ in
     "${centralConfig}/common/ssh.nix"
     "${centralConfig}/common/nix.nix"
     "${centralConfig}/common/upgrade-diff.nix"
-    "${centralConfig}/common/fish.nix"
   ];
+
+  # TODO: factor
+  system.autoUpgrade = {
+    enable = true;
+
+    flake = "github:arachne#${config.networking.hostName}";
+
+    dates = "minutely";
+    flags = [
+      "--option"
+      "accept-flake-config"
+      "true"
+
+      # required if using a small `dates` value
+      "--option"
+      "tarball-ttl"
+      "0"
+    ];
+
+    allowReboot = true;
+    rebootWindow = {
+      lower = "01:00";
+      upper = "05:00";
+    };
+  };
 
   # Time & hostname
   time.timeZone = "America/Chicago";
@@ -63,20 +86,28 @@ in
   '';
 
   # Packages
-  environment.systemPackages = import "${centralConfig}/common/pkgs.nix" pkgs;
+  environment.systemPackages = with pkgs; [
+    du-dust
+    fd
+    hck
+    git
+    jq
+    neovim
+    nix-output-monitor
+    rclone
+    ripgrep
+    rsync
+    sd
+    tmux
+    unzip
+    wget
+  ];
 
   # SSH + sudo + polkit
   security = {
     polkit.enable = true;
     sudo.enable = false;
     doas.enable = true;
-    doas.extraRules = [
-      {
-        users = [ user ];
-        keepEnv = true;
-      }
-    ];
-
   };
 
   # Stateless: follow latest
