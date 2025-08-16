@@ -20,7 +20,6 @@ in
     "${centralConfig}/common/nix.nix"
     "${centralConfig}/common/upgrade-diff.nix"
     "${centralConfig}/common/fish.nix"
-    "${centralConfig}/common/pkgs.nix"
   ];
 
   # Time & hostname
@@ -64,10 +63,7 @@ in
   '';
 
   # Packages
-  environment.systemPackages = with pkgs; [
-    neovim
-    tree
-  ];
+  environment.systemPackages = import "${centralConfig}/common/pkgs.nix" pkgs;
 
   # SSH + sudo + polkit
   security = {
