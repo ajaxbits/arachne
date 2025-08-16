@@ -70,7 +70,7 @@ in
     polkit.enable = true;
     sudo.enable = false;
     doas.enable = true;
-    security.doas.extraRules = [
+    doas.extraRules = [
       {
         users = [ user ];
         keepEnv = true;
