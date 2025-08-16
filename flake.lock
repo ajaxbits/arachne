@@ -14,7 +14,7 @@
         "rev": "564595d0ad4be7277e07fa63b5a991b3c645655d",
         "revCount": 278,
         "type": "tarball",
-        "url": "https://api.flakehub.com/f/pinned/ryantm/agenix/0.14.1/018c881c-43eb-7268-8c31-114bc555963f/source.tar.gz?rev=564595d0ad4be7277e07fa63b5a991b3c645655d&revCount=278"
+        "url": "https://api.flakehub.com/f/pinned/ryantm/agenix/0.14.1/018c881c-43eb-7268-8c31-114bc555963f/source.tar.gz"
       },
       "original": {
         "type": "tarball",
@@ -187,11 +187,11 @@
         "unstable": "unstable"
       },
       "locked": {
-        "lastModified": 1755377778,
-        "narHash": "sha256-9ANYinGTPUFiDa6fIVYkesHwfZydjnBedoqGMHHlhVc=",
+        "lastModified": 1755380261,
+        "narHash": "sha256-fG/d4d9P97WjnN0OrjOwuPGeKvpGJEypPCkL53m12WU=",
         "owner": "ajaxbits",
         "repo": "config",
-        "rev": "cfaa7178184ef745d994901c69ef7c3e817fcc35",
+        "rev": "418eaa118e8bc23d2394f4f2c4a2d33479ab6743",
         "type": "github"
       },
       "original": {
@@ -652,21 +652,6 @@
         "type": "github"
       }
     },
-    "impermanence": {
-      "locked": {
-        "lastModified": 1737831083,
-        "narHash": "sha256-LJggUHbpyeDvNagTUrdhe/pRVp4pnS6wVKALS782gRI=",
-        "owner": "nix-community",
-        "repo": "impermanence",
-        "rev": "4b3e914cdf97a5b536a889e939fb2fd2b043a170",
-        "type": "github"
-      },
-      "original": {
-        "owner": "nix-community",
-        "repo": "impermanence",
-        "type": "github"
-      }
-    },
     "ixx": {
       "inputs": {
         "flake-utils": [
@@ -749,7 +734,7 @@
         "narHash": "sha256-KYMUrTV7H/RR5/HRnjV5R3rRIuBXMemyJzTLi50NFTs=",
         "rev": "46a9e8fcfe4be72b4c7c8082ee11d2c42da1e873",
         "type": "tarball",
-        "url": "https://git.lix.systems/api/v1/repos/lix-project/nixos-module/archive/46a9e8fcfe4be72b4c7c8082ee11d2c42da1e873.tar.gz?rev=46a9e8fcfe4be72b4c7c8082ee11d2c42da1e873"
+        "url": "https://git.lix.systems/api/v1/repos/lix-project/nixos-module/archive/46a9e8fcfe4be72b4c7c8082ee11d2c42da1e873.tar.gz"
       },
       "original": {
         "type": "tarball",
@@ -1360,7 +1345,6 @@
         "agenix": "agenix",
         "centralConfig": "centralConfig",
         "disko": "disko_2",
-        "impermanence": "impermanence",
         "lix-module": "lix-module_2",
         "nixos-anywhere": "nixos-anywhere",
         "nixos-raspberrypi": "nixos-raspberrypi_2",
