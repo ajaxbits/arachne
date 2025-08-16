@@ -2,6 +2,7 @@
   centralConfig,
   config,
   nixos-raspberrypi,
+  user,
   pkgs,
   ...
 }:
@@ -16,6 +17,10 @@ in
     raspberry-pi-5.bluetooth
     "${centralConfig}/common/users.nix"
     "${centralConfig}/common/ssh.nix"
+    "${centralConfig}/common/nix.nix"
+    "${centralConfig}/common/upgrade-diff.nix"
+    "${centralConfig}/common/fish.nix"
+    "${centralConfig}/common/pkgs.nix"
   ];
 
   # Time & hostname
@@ -68,7 +73,14 @@ in
   security = {
     polkit.enable = true;
     sudo.enable = false;
-    doas.enable = false;
+    doas.enable = true;
+    security.doas.extraRules = [
+      {
+        users = [ user ];
+        keepEnv = true;
+      }
+    ];
+
   };
 
   # Stateless: follow latest
