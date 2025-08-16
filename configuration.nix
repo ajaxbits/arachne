@@ -18,31 +18,13 @@ in
     "${centralConfig}/common/ssh.nix"
     "${centralConfig}/common/nix.nix"
     "${centralConfig}/common/upgrade-diff.nix"
+
+    "${centralConfig}/components/cd"
   ];
 
-  # TODO: factor
-  system.autoUpgrade = {
+  components.cd = {
     enable = true;
-
-    flake = "github:arachne#${config.networking.hostName}";
-
-    dates = "minutely";
-    flags = [
-      "--option"
-      "accept-flake-config"
-      "true"
-
-      # required if using a small `dates` value
-      "--option"
-      "tarball-ttl"
-      "0"
-    ];
-
-    allowReboot = true;
-    rebootWindow = {
-      lower = "01:00";
-      upper = "05:00";
-    };
+    repo = "ajaxbits/arachne";
   };
 
   # Time & hostname

@@ -187,11 +187,11 @@
         "unstable": "unstable"
       },
       "locked": {
-        "lastModified": 1755373047,
-        "narHash": "sha256-mrOpGZJqv+Q/QYoaouXVNv7weE2WlHEH49gQfNENH/Q=",
+        "lastModified": 1755377778,
+        "narHash": "sha256-9ANYinGTPUFiDa6fIVYkesHwfZydjnBedoqGMHHlhVc=",
         "owner": "ajaxbits",
         "repo": "config",
-        "rev": "11b10d5b900a76d7c260ac4cf7b77822ceb6fb27",
+        "rev": "cfaa7178184ef745d994901c69ef7c3e817fcc35",
         "type": "github"
       },
       "original": {
