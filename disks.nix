@@ -1,7 +1,17 @@
-{ config, lib, ... }:
+{
+  config,
+  lib,
+  pkgs,
+  user,
+  ...
+}:
 
 let
   rootPoolName = "rpool";
+
+  dataPath = "/data";
+  persistentPath = "/persist";
+
   firmwarePartition = lib.recursiveUpdate {
     priority = 1;
 
@@ -45,8 +55,9 @@ let
 
 in
 {
-
-  networking.hostId = "0bd1a88c";
+  networking.hostId = builtins.substring 0 8 (
+    builtins.hashString "sha256" config.networking.hostName
+  );
   boot.supportedFilesystems = [ "zfs" ];
   services.zfs.autoScrub.enable = true;
   services.zfs.trim.enable = true;
@@ -73,13 +84,13 @@ in
             size = "100%";
             content = {
               type = "zfs";
-              pool = rootPoolName; # zroot
+              pool = rootPoolName;
             };
           };
 
         };
       };
-    }; # nvme0
+    };
 
     zpool = {
       ${rootPoolName} = {
@@ -93,7 +104,6 @@ in
 
         # zfs properties
         rootFsOptions = {
-          # "com.sun:auto-snapshot" = "false";
           # https://jrs-s.net/2018/08/17/zfs-tuning-cheat-sheet/
           compression = "lz4";
           atime = "off";
@@ -106,61 +116,136 @@ in
           canmount = "off";
         };
 
-        postCreateHook = "zfs list -t snapshot -H -o name | grep -E '^${rootPoolName}@blank$' || zfs snapshot ${rootPoolName}@blank";
-
-        datasets = {
-          # stuff which can be recomputed/easily redownloaded, e.g. nix store
-          local = {
-            type = "zfs_fs";
-            options.mountpoint = "none";
-          };
-          "local/nix" = {
-            type = "zfs_fs";
-            options = {
-              reservation = "128M";
-              mountpoint = "legacy"; # to manage "with traditional tools"
+        datasets =
+          let
+            diskCount = builtins.length (builtins.attrNames config.disko.devices.disk);
+          in
+          {
+            local = {
+              type = "zfs_fs";
+              options.mountpoint = "none";
             };
-            mountpoint = "/nix"; # nixos configuration mountpoint
-          };
+            safe = {
+              type = "zfs_fs";
+              options = {
+                mountpoint = "none";
+                # When we are mirroring, we only need one copy, but if we
+                # only have one disk, let's keep safe data at 2 copies
+                # to protect from bitrot
+                copies = if diskCount > 1 then 2 else 1;
+              };
+            };
 
-          # _system_ data
-          system = {
-            type = "zfs_fs";
-            options = {
-              mountpoint = "none";
+            "local/reserved" = {
+              type = "zfs_fs";
+              options = {
+                mountpoint = "none";
+                reservation = "5GiB";
+              };
+            };
+            "local/root" = {
+              type = "zfs_fs";
+              mountpoint = "/";
+              options.mountpoint = "legacy";
+              postCreateHook = ''
+                zfs snapshot ${rootPoolName}/local/root@blank
+              '';
+            };
+            "local/nix" = {
+              type = "zfs_fs";
+              mountpoint = "/nix";
+              options = {
+                atime = "off";
+                canmount = "on";
+                mountpoint = "legacy";
+                reservation = "128M";
+                "com.sun:auto-snapshot" = "true";
+              };
+            };
+
+            "safe/data" = {
+              type = "zfs_fs";
+              mountpoint = dataPath;
+              options = {
+                mountpoint = "legacy";
+                "com.sun:auto-snapshot" = "true";
+              };
+            };
+            "safe/persist" = {
+              type = "zfs_fs";
+              mountpoint = persistentPath;
+              options = {
+                mountpoint = "legacy";
+                "com.sun:auto-snapshot" = "true";
+              };
             };
           };
-          "system/root" = {
-            type = "zfs_fs";
-            options.mountpoint = "legacy";
-            mountpoint = "/";
-          };
-          "system/var" = {
-            type = "zfs_fs";
-            options.mountpoint = "legacy";
-            mountpoint = "/var";
-          };
-
-          # _user_ and _user service_ data. safest, long retention policy
-          safe = {
-            type = "zfs_fs";
-            options = {
-              copies = "2";
-              mountpoint = "none";
-            };
-          };
-          "safe/data" = {
-            type = "zfs_fs";
-            options.mountpoint = "legacy";
-            mountpoint = "/data";
-          };
-          "safe/var/lib" = {
-            type = "zfs_fs";
-            options.mountpoint = "legacy";
-            mountpoint = "/var/lib";
-          };
-        };
       };
     };
+  };
+
+  # Actually do the rollback
+  boot.initrd.systemd = {
+    enable = true;
+    services.initrd-rollback-root = {
+      after = [ "zfs-import-${rootPoolName}.service" ];
+      wantedBy = [ "initrd.target" ];
+      before = [ "sysroot.mount" ];
+      path = [ pkgs.zfs ];
+      description = "Rollback root fs";
+      unitConfig.DefaultDependencies = "no";
+      serviceConfig.Type = "oneshot";
+      script = "zfs rollback -r ${rootPoolName}/local/root@blank";
+    };
+  };
+
+  # Make sure boot actually happens
+  fileSystems = {
+    ${dataPath}.neededForBoot = true;
+    ${persistentPath}.neededForBoot = true;
+  };
+
+  # Link everything with persistence
+  environment = {
+    persistence.${persistentPath} = {
+      hideMounts = true;
+      directories = [
+        "/var/lib"
+        "/var/log"
+      ];
+      files = [
+        "/etc/adjtime"
+        "/etc/machine-id"
+        "/etc/ssh/authorized_keys.d/${user}"
+        "/etc/ssh/ssh_host_ed25519_key"
+        "/etc/ssh/ssh_host_ed25519_key.pub"
+        "/etc/ssh/ssh_host_rsa_key"
+        "/etc/ssh/ssh_host_rsa_key.pub"
+        "/etc/zfs/zpool.cache"
+      ];
+    };
+
+    etc = {
+      "/etc/ssh/authorized_keys.d/${user}".source = "${persistentPath}/etc/ssh/authorized_keys.d/${user}";
+      "ssh/ssh_host_ed25519_key.pub".source = "${persistentPath}/etc/ssh/ssh_host_ed25519_key.pub";
+      "ssh/ssh_host_ed25519_key".source = "${persistentPath}/etc/ssh/ssh_host_ed25519_key";
+      "ssh/ssh_host_rsa_key.pub".source = "${persistentPath}/etc/ssh/ssh_host_rsa_key.pub";
+      "ssh/ssh_host_rsa_key".source = "${persistentPath}/etc/ssh/ssh_host_rsa_key";
+      "machine-id".source = "${persistentPath}/etc/machine-id";
+    };
+  };
+
+  services.openssh = {
+    hostKeys = [
+      {
+        type = "ed25519";
+        path = "/persist/etc/ssh/ssh_host_ed25519_key";
+      }
+      {
+        type = "rsa";
+        bits = 4096;
+        path = "/persist/etc/ssh/ssh_host_rsa_key";
+      }
+    ];
   };
 }
