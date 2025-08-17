@@ -12,8 +12,10 @@ in
   imports = with nixos-raspberrypi.nixosModules; [
     ./configtxt.nix
     ./disks.nix
+    ./docker.nix
     raspberry-pi-5.base
     raspberry-pi-5.bluetooth
+
     "${centralConfig}/common/users.nix"
     "${centralConfig}/common/ssh.nix"
     "${centralConfig}/common/nix.nix"
