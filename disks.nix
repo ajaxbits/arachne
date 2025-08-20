@@ -216,7 +216,6 @@ in
       files = [
         "/etc/adjtime"
         "/etc/machine-id"
-        "/etc/ssh/authorized_keys.d/${user}"
         "/etc/ssh/ssh_host_ed25519_key"
         "/etc/ssh/ssh_host_ed25519_key.pub"
         "/etc/ssh/ssh_host_rsa_key"
@@ -226,7 +225,6 @@ in
     };
 
     etc = {
-      "/etc/ssh/authorized_keys.d/${user}".source = "${persistentPath}/etc/ssh/authorized_keys.d/${user}";
       "ssh/ssh_host_ed25519_key.pub".source = "${persistentPath}/etc/ssh/ssh_host_ed25519_key.pub";
       "ssh/ssh_host_ed25519_key".source = "${persistentPath}/etc/ssh/ssh_host_ed25519_key";
       "ssh/ssh_host_rsa_key.pub".source = "${persistentPath}/etc/ssh/ssh_host_rsa_key.pub";
