@@ -3,6 +3,7 @@
   config,
   nixos-raspberrypi,
   pkgs,
+  lib,
   ...
 }:
 let
@@ -22,11 +23,26 @@ in
     "${centralConfig}/common/upgrade-diff.nix"
 
     "${centralConfig}/components/cd"
+    (import "${centralConfig}/components/tailscale" {
+      inherit config lib;
+      pkgsUnstable = pkgs;
+    })
   ];
 
   components.cd = {
     enable = true;
     repo = "ajaxbits/arachne";
+  };
+  components.tailscale = {
+    enable = true;
+    initialAuthKey = "tskey-auth-kfoHk2vsZr11CNTRL-bawmcoGic854FLDm4rRj25EToQpSyME5";
+    tags = [
+      "ajax"
+      "homelab"
+      "nixos"
+    ];
+    advertiseExitNode = true;
+    advertiseRoutes = [ "172.22.0.0/15" ];
   };
 
   # Time & hostname
