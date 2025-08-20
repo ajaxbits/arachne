@@ -132,7 +132,7 @@ in
                 # When we are mirroring, we only need one copy, but if we
                 # only have one disk, let's keep safe data at 2 copies
                 # to protect from bitrot
-                copies = if diskCount > 1 then 2 else 1;
+                copies = if diskCount > 1 then "2" else "1";
               };
             };
 
