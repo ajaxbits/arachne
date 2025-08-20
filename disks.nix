@@ -1,18 +1,10 @@
-{
-  config,
-  lib,
-  pkgs,
-  user,
-  ...
-}:
-
 let
   rootPoolName = "rpool";
+  dataPath = "/srv";
 
-  dataPath = "/data";
-  persistentPath = "/persist";
-
-  firmwarePartition = lib.recursiveUpdate {
+  firmwarePartition = {
+    size = "1024M";
+    label = "FIRMWARE";
     priority = 1;
 
     type = "0700"; # Microsoft basic data
@@ -20,8 +12,8 @@ let
       0 # Required Partition
     ];
 
-    size = "1024M";
     content = {
+      mountpoint = "/boot/firmware";
       type = "filesystem";
       format = "vfat";
       mountOptions = [
@@ -33,16 +25,18 @@ let
     };
   };
 
-  espPartition = lib.recursiveUpdate {
+  espPartition = {
+    label = "ESP";
+    size = "1024M";
     type = "EF00"; # EFI System Partition (ESP)
     attributes = [
       2 # Legacy BIOS Bootable, for U-Boot to find extlinux config
     ];
 
-    size = "1024M";
     content = {
       type = "filesystem";
       format = "vfat";
+      mountpoint = "/boot";
       mountOptions = [
         "noatime"
         "noauto"
@@ -55,13 +49,7 @@ let
 
 in
 {
-  networking.hostId = builtins.substring 0 8 (
-    builtins.hashString "sha256" config.networking.hostName
-  );
-  boot.supportedFilesystems = [ "zfs" ];
-  services.zfs.autoScrub.enable = true;
-  services.zfs.trim.enable = true;
-
+  ### DISKS ###
   disko.devices = {
     disk.nvme0 = {
       type = "disk";
@@ -69,17 +57,8 @@ in
       content = {
         type = "gpt";
         partitions = {
-
-          FIRMWARE = firmwarePartition {
-            label = "FIRMWARE";
-            content.mountpoint = "/boot/firmware";
-          };
-
-          ESP = espPartition {
-            label = "ESP";
-            content.mountpoint = "/boot";
-          };
-
+          FIRMWARE = firmwarePartition;
+          ESP = espPartition;
           zfs = {
             size = "100%";
             content = {
@@ -98,8 +77,8 @@ in
 
         # zpool properties
         options = {
-          ashift = "12";
-          autotrim = if config.services.zfs.trim.enable then "on" else "off"; # see also services.zfs.trim.enable
+          ashift = "12"; # TODO: check
+          autotrim = "on";
         };
 
         # zfs properties
@@ -116,137 +95,59 @@ in
           canmount = "off";
         };
 
-        datasets =
-          let
-            diskCount = builtins.length (builtins.attrNames config.disko.devices.disk);
-          in
-          {
-            local = {
-              type = "zfs_fs";
-              options.mountpoint = "none";
-            };
-            safe = {
-              type = "zfs_fs";
-              options = {
-                mountpoint = "none";
-                # When we are mirroring, we only need one copy, but if we
-                # only have one disk, let's keep safe data at 2 copies
-                # to protect from bitrot
-                copies = if diskCount > 1 then "2" else "1";
-              };
-            };
-
-            "local/reserved" = {
-              type = "zfs_fs";
-              options = {
-                mountpoint = "none";
-                reservation = "5GiB";
-              };
-            };
-            "local/root" = {
-              type = "zfs_fs";
-              mountpoint = "/";
-              options.mountpoint = "legacy";
-              postCreateHook = ''
-                zfs snapshot ${rootPoolName}/local/root@blank
-              '';
-            };
-            "local/nix" = {
-              type = "zfs_fs";
-              mountpoint = "/nix";
-              options = {
-                atime = "off";
-                canmount = "on";
-                mountpoint = "legacy";
-                reservation = "128M";
-                "com.sun:auto-snapshot" = "true";
-              };
-            };
-
-            "safe/data" = {
-              type = "zfs_fs";
-              mountpoint = dataPath;
-              options = {
-                mountpoint = "legacy";
-                "com.sun:auto-snapshot" = "true";
-              };
-            };
-            "safe/persist" = {
-              type = "zfs_fs";
-              mountpoint = persistentPath;
-              options = {
-                mountpoint = "legacy";
-                "com.sun:auto-snapshot" = "true";
-              };
+        datasets = {
+          system = {
+            type = "zfs_fs";
+            options.mountpoint = "none";
+          };
+          safe = {
+            type = "zfs_fs";
+            options = {
+              mountpoint = "none";
+              # When we are mirroring, we only need one copy, but if we
+              # only have one disk, let's keep safe data at 2 copies
+              # to protect from bitrot
+              copies = "2";
             };
           };
+
+          "system/root" = {
+            type = "zfs_fs";
+            mountpoint = "/";
+            options.mountpoint = "legacy";
+          };
+          "system/nix" = {
+            type = "zfs_fs";
+            mountpoint = "/nix";
+            options = {
+              atime = "off";
+              canmount = "on";
+              mountpoint = "legacy";
+              reservation = "128M";
+            };
+          };
+
+          "safe/srv" = {
+            type = "zfs_fs";
+            mountpoint = dataPath;
+            options = {
+              mountpoint = "legacy";
+              "com.sun:auto-snapshot" = "true";
+            };
+          };
+        };
       };
     };
   };
 
-  # Actually do the rollback
-  boot.initrd.systemd = {
-    enable = true;
-    services.initrd-rollback-root = {
-      after = [ "zfs-import-${rootPoolName}.service" ];
-      wantedBy = [ "initrd.target" ];
-      before = [ "sysroot.mount" ];
-      path = [ pkgs.zfs ];
-      description = "Rollback root fs";
-      unitConfig.DefaultDependencies = "no";
-      serviceConfig.Type = "oneshot";
-      script = "zfs rollback -r ${rootPoolName}/local/root@blank";
-    };
+  ### FILESYSTEM ###
+  networking.hostId = "9561de03";
+  boot.supportedFilesystems = [ "zfs" ];
+  services.zfs = {
+    autoScrub.enable = true;
+    trim.enable = true;
   };
-
-  # Make sure boot actually happens
   fileSystems = {
     ${dataPath}.neededForBoot = true;
-    ${persistentPath}.neededForBoot = true;
-  };
-
-  # Link everything with persistence
-  environment = {
-    persistence.${persistentPath} = {
-      hideMounts = true;
-      directories = [
-        "/var/lib"
-        "/var/log"
-      ];
-      files = [
-        "/etc/adjtime"
-        "/etc/machine-id"
-        "/etc/ssh/ssh_host_ed25519_key"
-        "/etc/ssh/ssh_host_ed25519_key.pub"
-        "/etc/ssh/ssh_host_rsa_key"
-        "/etc/ssh/ssh_host_rsa_key.pub"
-        "/etc/zfs/zpool.cache"
-      ];
-    };
-
-    etc = {
-      "ssh/ssh_host_ed25519_key.pub".source = "${persistentPath}/etc/ssh/ssh_host_ed25519_key.pub";
-      "ssh/ssh_host_ed25519_key".source = "${persistentPath}/etc/ssh/ssh_host_ed25519_key";
-      "ssh/ssh_host_rsa_key.pub".source = "${persistentPath}/etc/ssh/ssh_host_rsa_key.pub";
-      "ssh/ssh_host_rsa_key".source = "${persistentPath}/etc/ssh/ssh_host_rsa_key";
-      "machine-id".source = "${persistentPath}/etc/machine-id";
-    };
-  };
-
-  age.secretsDir = "${persistentPath}/agenix";
-  age.secretsMountPoint = "${persistentPath}/agenix.d";
-
-  services.openssh = {
-    hostKeys = [
-      {
-        type = "ed25519";
-        path = "${persistentPath}/etc/ssh/ssh_host_ed25519_key";
-      }
-      {
-        type = "rsa";
-        bits = 4096;
-        path = "${persistentPath}/etc/ssh/ssh_host_rsa_key";
-      }
-    ];
   };
 }
