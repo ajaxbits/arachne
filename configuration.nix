@@ -45,6 +45,42 @@ in
     settings.web.listen.port = 6464;
   };
 
+  services.netbox = rec {
+    enable = true;
+    dataDir = "/srv/netbox";
+    unixSocket = "/run/netbox/netbox.sock";
+    secretKeyFile = "${dataDir}/secret-key-file"; # TODO: make better
+  };
+  services.caddy.virtualHosts = {
+    "https://netbox.ajax.casa" =
+      let
+        cfg = config.services.netbox;
+      in
+      {
+        extraConfig = ''
+          encode gzip zstd
+
+          handle_path /static/* {
+              root * ${cfg.dataDir}/static
+              file_server
+          }
+
+          handle {
+              reverse_proxy unix/${cfg.unixSocket}
+          }
+
+          import cloudflare
+        '';
+      };
+    "https://disks.ajax.casa" = {
+      extraConfig = ''
+        encode gzip zstd
+        reverse_proxy localhost:6464
+        import cloudflare
+      '';
+    };
+  };
+
   components = {
     caddy = {
       enable = true;
