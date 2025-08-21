@@ -36,6 +36,12 @@ in
     })
   ];
 
+  services.scrutiny = {
+    enable = true;
+    openFirewall = true;
+    settings.web.listen.port = 6464;
+  };
+
   components = {
     caddy = {
       enable = false;
