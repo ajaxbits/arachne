@@ -24,6 +24,9 @@ in
     ./stub.nix
     "${centralConfig}/common/users.nix"
     "${centralConfig}/common/ssh.nix"
+    "${centralConfig}/common/fish.nix"
+    "${centralConfig}/common/security.nix"
+    "${centralConfig}/common/git.nix"
     "${centralConfig}/common/nix.nix"
     "${centralConfig}/common/upgrade-diff.nix"
 
