@@ -40,6 +40,10 @@
       url = "https://flakehub.com/f/ryantm/agenix/0.14.0.tar.gz";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+    caddy = {
+      url = "github:ajaxbits/nixos-caddy-patched";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
 
     nixos-anywhere = {
       url = "github:nix-community/nixos-anywhere";
@@ -67,6 +71,7 @@
       forSystems = systems: f: nixpkgs.lib.genAttrs systems f;
 
       user = "admin";
+
     in
     {
 
@@ -90,6 +95,9 @@
       nixosConfigurations.arachne = nixos-raspberrypi.lib.nixosSystemFull {
         specialArgs = inputs // {
           inherit user;
+          overlays.caddy = _self: _super: {
+            caddy-patched = inputs.caddy.packages."aarch64-linux".caddy;
+          };
         };
         modules = [
           agenix.nixosModules.age

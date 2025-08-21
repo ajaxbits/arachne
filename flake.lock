@@ -122,6 +122,26 @@
     "caddy": {
       "inputs": {
         "nixpkgs": [
+          "nixpkgs"
+        ]
+      },
+      "locked": {
+        "lastModified": 1729527061,
+        "narHash": "sha256-9nP6nUAQJ0XOXMkFAhxjHK0+SlRXzMYfEYBMzckd0qk=",
+        "owner": "ajaxbits",
+        "repo": "nixos-caddy-patched",
+        "rev": "ec268cce1140c7423138b3db93a0859ec685f354",
+        "type": "github"
+      },
+      "original": {
+        "owner": "ajaxbits",
+        "repo": "nixos-caddy-patched",
+        "type": "github"
+      }
+    },
+    "caddy_2": {
+      "inputs": {
+        "nixpkgs": [
           "centralConfig",
           "nixpkgs"
         ]
@@ -168,7 +188,7 @@
       "inputs": {
         "agenix": "agenix_2",
         "authentik-nix": "authentik-nix",
-        "caddy": "caddy",
+        "caddy": "caddy_2",
         "centerpiece": "centerpiece",
         "disko": "disko",
         "flake-parts": "flake-parts_2",
@@ -187,11 +207,11 @@
         "unstable": "unstable"
       },
       "locked": {
-        "lastModified": 1755807146,
-        "narHash": "sha256-yR0RP7+zgpAP0PfZt4dsHSoLQLwOUt7kQPOrIVn7JOU=",
+        "lastModified": 1755810806,
+        "narHash": "sha256-5fTpecVJlzho5kM10Yt9GBXpMAuwS9kA6ahTzelgHu0=",
         "owner": "ajaxbits",
         "repo": "config",
-        "rev": "25a5b39a478c4d4a036b5383fa5fa93b3b8481d1",
+        "rev": "80a7392644d8d5207fee2f29362a77dc5231ecdf",
         "type": "github"
       },
       "original": {
@@ -1343,6 +1363,7 @@
     "root": {
       "inputs": {
         "agenix": "agenix",
+        "caddy": "caddy",
         "centralConfig": "centralConfig",
         "disko": "disko_2",
         "lix-module": "lix-module_2",

@@ -21,19 +21,26 @@ in
     raspberry-pi-5.bluetooth
 
     ./docker.nix
+    ./stub.nix
     "${centralConfig}/common/users.nix"
     "${centralConfig}/common/ssh.nix"
     "${centralConfig}/common/nix.nix"
     "${centralConfig}/common/upgrade-diff.nix"
 
     "${centralConfig}/components/cd"
+    "${centralConfig}/components/caddy"
     "${centralConfig}/components/bookmarks"
     (import "${centralConfig}/components/tailscale" {
       inherit config lib;
       pkgsUnstable = pkgs;
     })
   ];
+
   components = {
+    caddy = {
+      enable = true;
+      cloudflare.enable = true;
+    };
     cd = {
       enable = true;
       repo = "ajaxbits/arachne";
