@@ -39,7 +39,7 @@ in
   };
   components.tailscale = {
     enable = true;
-    initialAuthKey = "tskey-auth-kfoHk2vsZr11CNTRL-bawmcoGic854FLDm4rRj25EToQpSyME5";
+    initialAuthKey = "tskey-auth-k4o2kmWUBn11CNTRL-cyLocuNQTfS93v1Ay8vuiSZBMBeEtEU4";
     tags = [
       "ajax"
       "homelab"
