@@ -97,6 +97,14 @@ rec {
         };
 
         datasets = {
+          reserved = {
+            type = "zfs_fs";
+            options = {
+              mountpoint = "none";
+              reservation = "5GiB";
+            };
+          };
+
           system = {
             type = "zfs_fs";
             options.mountpoint = "none";
@@ -137,18 +145,6 @@ rec {
             mountpoint = dataPath;
             options = {
               mountpoint = "legacy";
-              "com.sun:auto-snapshot" = "true";
-            };
-          };
-          "safe${dataPath}/media" = {
-            type = "zfs_fs";
-            mountpoint = "${dataPath}/media";
-            options = {
-              atime = "off";
-              compression = "zstd-3";
-              mountpoint = "legacy";
-              redundant_metadata = "most";
-              sync = "disabled";
               "com.sun:auto-snapshot" = "true";
             };
           };
