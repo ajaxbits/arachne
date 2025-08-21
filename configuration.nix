@@ -38,8 +38,7 @@ in
 
   components = {
     caddy = {
-      enable = true;
-      cloudflare.enable = true;
+      enable = false;
     };
     cd = {
       enable = true;
