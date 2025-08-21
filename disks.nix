@@ -1,3 +1,4 @@
+{ hostName, ... }:
 let
   rootPoolName = "rpool";
   dataPath = "/srv";
@@ -48,7 +49,7 @@ let
   };
 
 in
-{
+rec {
   ### DISKS ###
   disko.devices = {
     disk.nvme0 = {
@@ -100,17 +101,6 @@ in
             type = "zfs_fs";
             options.mountpoint = "none";
           };
-          safe = {
-            type = "zfs_fs";
-            options = {
-              mountpoint = "none";
-              # When we are mirroring, we only need one copy, but if we
-              # only have one disk, let's keep safe data at 2 copies
-              # to protect from bitrot
-              copies = "2";
-            };
-          };
-
           "system/root" = {
             type = "zfs_fs";
             mountpoint = "/";
@@ -123,15 +113,42 @@ in
               atime = "off";
               canmount = "on";
               mountpoint = "legacy";
-              reservation = "128M";
+              recordsize = "1M";
+              reservation = "20G";
+              "com.sun:auto-snapshot" = "false";
             };
           };
 
-          "safe/srv" = {
+          safe = {
+            type = "zfs_fs";
+            options.mountpoint = "none";
+          };
+          "safe/backups" = {
+            type = "zfs_fs";
+            mountpoint = "/backups";
+            options = {
+              mountpoint = "legacy";
+              compression = "off";
+              "com.sun:auto-snapshot" = "false";
+            };
+          };
+          "safe${dataPath}" = {
             type = "zfs_fs";
             mountpoint = dataPath;
             options = {
               mountpoint = "legacy";
+              "com.sun:auto-snapshot" = "true";
+            };
+          };
+          "safe${dataPath}/media" = {
+            type = "zfs_fs";
+            mountpoint = "${dataPath}/media";
+            options = {
+              atime = "off";
+              compression = "zstd-3";
+              mountpoint = "legacy";
+              redundant_metadata = "most";
+              sync = "disabled";
               "com.sun:auto-snapshot" = "true";
             };
           };
@@ -141,13 +158,11 @@ in
   };
 
   ### FILESYSTEM ###
-  networking.hostId = "9561de03";
+  networking.hostId = builtins.substring 0 8 (builtins.hashString "sha256" hostName);
   boot.supportedFilesystems = [ "zfs" ];
   services.zfs = {
     autoScrub.enable = true;
-    trim.enable = true;
+    trim.enable = disko.devices.zpool.${rootPoolName}.options.autotrim == "on";
   };
-  fileSystems = {
-    ${dataPath}.neededForBoot = true;
-  };
+  fileSystems.${dataPath}.neededForBoot = true;
 }

@@ -78,9 +78,10 @@
         {
           default = pkgs.mkShell {
             nativeBuildInputs = with pkgs; [
-              nixpkgs-fmt
+              disko.packages.${system}.disko
               nix-output-monitor
               nixos-anywhere.packages.${system}.default
+              nixpkgs-fmt
             ];
           };
         }
@@ -99,5 +100,6 @@
         ];
       };
 
+      diskoConfigurations.arachne = ../disks.nix;
     };
 }

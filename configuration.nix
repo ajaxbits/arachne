@@ -11,12 +11,16 @@ let
 in
 {
   imports = with nixos-raspberrypi.nixosModules; [
-    ./configtxt.nix
     ./disks.nix
-    ./docker.nix
+    {
+      _module.args = { inherit hostName; };
+    }
+
+    ./configtxt.nix
     raspberry-pi-5.base
     raspberry-pi-5.bluetooth
 
+    ./docker.nix
     "${centralConfig}/common/users.nix"
     "${centralConfig}/common/ssh.nix"
     "${centralConfig}/common/nix.nix"
