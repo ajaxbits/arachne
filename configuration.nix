@@ -66,8 +66,8 @@ in
     inherit hostName;
     domain = "ajax.casa";
 
-    # Safe(ish) network defaults + iwd
     useNetworkd = true;
+    firewall.enable = false;
     firewall.allowedUDPPorts = [ 5353 ];
     wireless.enable = false;
     wireless.iwd = {
