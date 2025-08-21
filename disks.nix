@@ -1,5 +1,10 @@
-{ hostName, ... }:
+{
+  hostName ? "default",
+  ...
+}:
 let
+  sectorSizeBytes = 512;
+
   rootPoolName = "rpool";
   dataPath = "/srv";
 
@@ -78,7 +83,12 @@ rec {
 
         # zpool properties
         options = {
-          ashift = "12"; # TODO: check
+          ashift = builtins.getAttr (builtins.toString sectorSizeBytes) {
+            # https://jrs-s.net/2018/08/17/zfs-tuning-cheat-sheet/
+            "512" = "9";
+            "4000" = "12";
+            "8000" = "13";
+          };
           autotrim = "on";
         };
 

@@ -100,6 +100,6 @@
         ];
       };
 
-      diskoConfigurations.arachne = ../disks.nix;
+      diskoConfigurations.arachne = import ./disks.nix;
     };
 }
