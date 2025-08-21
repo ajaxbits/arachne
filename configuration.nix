@@ -27,26 +27,29 @@ in
     "${centralConfig}/common/upgrade-diff.nix"
 
     "${centralConfig}/components/cd"
+    "${centralConfig}/components/bookmarks"
     (import "${centralConfig}/components/tailscale" {
       inherit config lib;
       pkgsUnstable = pkgs;
     })
   ];
-
-  components.cd = {
-    enable = true;
-    repo = "ajaxbits/arachne";
-  };
-  components.tailscale = {
-    enable = true;
-    initialAuthKey = "tskey-auth-k4o2kmWUBn11CNTRL-cyLocuNQTfS93v1Ay8vuiSZBMBeEtEU4";
-    tags = [
-      "ajax"
-      "homelab"
-      "nixos"
-    ];
-    advertiseExitNode = true;
-    advertiseRoutes = [ "172.22.0.0/15" ];
+  components = {
+    cd = {
+      enable = true;
+      repo = "ajaxbits/arachne";
+    };
+    bookmarks.enable = true;
+    tailscale = {
+      enable = true;
+      initialAuthKey = "tskey-auth-k4o2kmWUBn11CNTRL-cyLocuNQTfS93v1Ay8vuiSZBMBeEtEU4";
+      tags = [
+        "ajax"
+        "homelab"
+        "nixos"
+      ];
+      advertiseExitNode = true;
+      advertiseRoutes = [ "172.22.0.0/15" ];
+    };
   };
 
   # Time & hostname
