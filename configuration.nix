@@ -112,9 +112,8 @@ in
   environment.systemPackages = with pkgs; [
     du-dust
     fd
-    ghostty.terminfo
-    git
     hck
+    git
     jq
     neovim
     nix-output-monitor
