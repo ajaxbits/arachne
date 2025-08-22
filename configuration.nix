@@ -81,6 +81,8 @@ in
     };
   };
 
+  # TODO revisit. When we run every minute, losses of power create corruption
+  system.autoUpgrade.dates = lib.mkForce "*-*-* 03:00:00";
   components = {
     caddy = {
       enable = true;
@@ -171,17 +173,6 @@ in
 
   # Stateless: follow latest
   system.stateVersion = config.system.nixos.release;
-
-  # Useful tags
-  system.nixos.tags =
-    let
-      cfg = config.boot.loader.raspberryPi;
-    in
-    [
-      hostName
-      cfg.bootloader
-      config.boot.kernelPackages.kernel.version
-    ];
 
   # tmpfs for /tmp
   boot.tmp.useTmpfs = true;
